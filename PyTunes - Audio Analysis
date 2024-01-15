@@ -1,0 +1,62 @@
+import numpy as np
+import scipy.io.wavfile as wavfile
+import matplotlib
+import matplotlib.pyplot as plt
+from pydub import AudioSegment
+
+def mp3_to_wav (mp3, wav):
+    audio = AudioSegment.from_mp3(mp3)
+    audio.export(wav, format="wav")
+
+def fast_fourrier(wav_file):
+    # Get sample rate and data points from wav file
+    rate, data = wavfile.read(wav_file)
+
+    # If data is of type stereo (2 channels), convert it to type mono
+    if len(data.shape) > 1:
+        data = np.mean(data, axis=1)
+
+    # Normalize (scale down) the data to range of [-1,1] by dividing by 32768, the maximum absolute value of a 16 bit integer
+    # float32 requires half the memory of a normal float (float64) and is used as it is provides sufficient precision with increased efficiency
+    # -1 represents min volume, 1 represents max volume
+    data = data.astype(np.float32) / 32768.0
+
+    # Compute Fast Fourrier Transform
+    n = len(data)
+    result = np.fft.fft(data)
+    magnitude = np.abs(result)
+    frequency = np.fft.fftfreq(n, d=1/rate)
+
+    downsampling_factor = 1000
+
+    # Compute the downsampling indices
+    downsampling_indices = np.arange(0, len(frequency), downsampling_factor)
+
+    # Downsample the frequency and magnitude arrays
+    downsampled_frequency = frequency[downsampling_indices]
+    downsampled_magnitude = magnitude[downsampling_indices]
+
+    return downsampled_frequency, downsampled_magnitude
+
+def plot_fast_fourrier(frequency, magnitude):
+    plt.figure(figsize=(14,7))
+    plt.plot(frequency, magnitude)
+    plt.title("Fast Fourrier Transform Results")
+    plt.xlabel('Frequency (Hz)')
+    plt.ylabel('Magnitude')
+    plt.grid()
+    print("hello")
+    plt.show(block=False)
+    plt.show()
+    print("hell")
+
+
+if __name__ == "__main__":
+    mp3_file = input("Enter the path to your MP3/WAV file: ")
+    wav_filename = "output.wav"
+    wav_file = "/Users/jordanvick/Desktop/PythonProject/fft_output/" + wav_filename
+    mp3_to_wav(mp3_file, wav_file)
+    output_frequency, output_magnitude = fast_fourrier(wav_file)
+    print("almost")
+    plot_fast_fourrier(output_frequency, output_magnitude)
+    print("made it")
